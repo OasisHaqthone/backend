@@ -2,10 +2,24 @@ package com.oasis.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+@Entity
+@Table(name="jre")
 public class JreModel implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	@Id
 	int id;
+	@Column
 	String jrename;
+	@Column
 	String basepackage;
+	@Column
 	String location;
 	
 	
