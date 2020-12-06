@@ -7,14 +7,12 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +20,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.oasis.model.JreModel;
@@ -66,37 +64,36 @@ public class JreController {
 	private List<JreModel> searchJre(@PathVariable(value = "searchkey") String searchkey) {
 		System.out.println("request come from ui with text->" + searchkey);
 		List<JreModel> response = jreService.searchJre(searchkey.toUpperCase());
-		
+
 		return response;
 	}
 
 	@GetMapping(value = "download/{jrename}")
-	public void download(@PathVariable(value = "jrename") String jrename,HttpServletResponse response) throws IOException, URISyntaxException {
-		System.out.println("download request->"+jrename);
+	public void download(@PathVariable(value = "jrename") String jrename, HttpServletResponse response)
+			throws IOException, URISyntaxException {
+		System.out.println("download request->" + jrename);
 		JreModel jre = jreService.findJre(jrename);
-		String filePath =  jre.getLocation();
-		File downloadFile= new File(filePath);
-		byte[] isr = Files.readAllBytes(downloadFile.toPath()
-				);
-	    ByteArrayOutputStream out = new ByteArrayOutputStream(isr.length);
-	    out.write(isr, 0, isr.length);
+		String filePath = jre.getLocation();
+		File downloadFile = new File(filePath);
+		byte[] isr = Files.readAllBytes(downloadFile.toPath());
+		ByteArrayOutputStream out = new ByteArrayOutputStream(isr.length);
+		out.write(isr, 0, isr.length);
 
-	    response.setContentType("application/zip");
-	    // Use 'inline' for preview and 'attachement' for download in browser.
-	    response.addHeader("Content-Disposition", "inline; filename=" + jrename);
+		response.setContentType("application/zip");
+		// Use 'inline' for preview and 'attachement' for download in browser.
+		response.addHeader("Content-Disposition", "inline; filename=" + jrename);
 
-	    OutputStream os;
-	    try {
-	        os = response.getOutputStream();
-	        out.writeTo(os);
-	        os.flush();
-	        os.close();
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
+		OutputStream os;
+		try {
+			os = response.getOutputStream();
+			out.writeTo(os);
+			os.flush();
+			os.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	
 	@GetMapping("/getalljrepackages")
 	public PagenationResponse retrieveCustomer(@Param(value = "packageName") String packageName,
 			@Param(value = "page") int page, @Param(value = "size") int size) {
@@ -109,14 +106,20 @@ public class JreController {
 
 		return res;
 	}
-	
-	@PostMapping(value = "/buildjre/{jrePackage}")
-	private List<JreModel> buildJre(@PathVariable(value = "jrePackage") List<JrePackage> jrePackage) {
-		System.out.println("request come from ui with text->" + jrePackage.size());
-		
-		
-		return null;
+
+	@PostMapping(value = "/buildjre")
+	private void buildJre(@RequestBody List<JrePackage> jrePackage, HttpServletResponse response) {
+
+		try {
+			jreService.createCustomJre(jrePackage, response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
-	
 
 }
